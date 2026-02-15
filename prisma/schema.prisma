@@ -33,6 +33,7 @@ model disciplinas {
   clientes          clientes[]
   horarios          horarios[]
   pagos             pagos[]
+  pago_disciplina   pago_disciplina[]
   profesores        profesores[]
 }
 
@@ -75,4 +76,14 @@ model usuarios {
   mail_usuario       String   @unique @db.VarChar(255)
   contrasena_usuario String   @db.VarChar(255)
   activo             Boolean? @default(true)
+}
+
+model pago_disciplina {
+  id_pago_disciplina Int         @id @default(autoincrement())
+  id_disciplina      Int
+  monto_cuota        Decimal     @db.Decimal(10, 2)
+  fecha_pago         DateTime?   @default(now()) @db.Timestamptz(6)
+  periodo_pagado     DateTime?   @db.Date
+  activo             Boolean?    @default(true)
+  disciplinas        disciplinas @relation(fields: [id_disciplina], references: [id_disciplina], onDelete: NoAction, onUpdate: NoAction, map: "fk_disciplina_pago_ope")
 }
