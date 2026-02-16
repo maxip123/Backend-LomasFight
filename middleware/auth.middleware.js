@@ -12,16 +12,10 @@ const comparePassword = async (plainPassword, hashedPassword) => {
 
 // Generar JWT sin expiración
 const generateToken = (userId, email) => {
-  try {
-    const token = jwt.sign(
-      { userId, email },
-      process.env.JWT_SECRET,
-      { expiresIn: undefined } // Sin expiración
-    );
-    return token;
-  } catch (error) {
-    throw new Error('Error al generar token');
-  }
+  return jwt.sign(
+    { userId, email },
+    process.env.JWT_SECRET
+  );
 };
 
 // Middleware para validar token JWT
