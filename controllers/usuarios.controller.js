@@ -1,5 +1,6 @@
 import { prisma } from '../config/prisma.js';
 import { comparePassword, generateToken } from '../middleware/auth.middleware.js';
+import bcrypt from 'bcrypt';
 
 const loginUsuario = async (req, res) => {
     try {
