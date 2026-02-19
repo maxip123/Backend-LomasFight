@@ -3,7 +3,7 @@ import { prisma } from '../config/prisma.js';
 const getClientes = async (req, res) => {
     try {
         const clientes = await prisma.clientes.findMany({
-            where: { activo: true },
+            where: { },
             include: {
                 disciplinas: true,
                 profesores: true,
@@ -28,7 +28,7 @@ const getClienteById = async (req, res) => {
                 pagos: true
             }
         });
-        if (!cliente || !cliente.activo) {
+        if (!cliente) {
             return res.status(404).json({ error: 'Cliente no encontrado' });
         }
         res.json(cliente);
@@ -73,13 +73,13 @@ const createCliente = async (req, res) => {
 const updateCliente = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, apellido, dni, fecha_nacimiento, grupo_sanguineo, id_disciplina, id_profesor_que_cargo } = req.body;
+        const { nombre, apellido, dni, fecha_nacimiento, grupo_sanguineo, id_disciplina, id_profesor_que_cargo, activo } = req.body;
         
         const cliente = await prisma.clientes.findUnique({
             where: { id_cliente: parseInt(id) }
         });
         
-        if (!cliente || !cliente.activo) {
+        if (!cliente) {
             return res.status(404).json({ error: 'Cliente no encontrado' });
         }
         
@@ -92,7 +92,8 @@ const updateCliente = async (req, res) => {
                 ...(fecha_nacimiento && { fecha_nacimiento: new Date(fecha_nacimiento) }),
                 ...(grupo_sanguineo && { grupo_sanguineo }),
                 ...(id_disciplina && { id_disciplina }),
-                ...(id_profesor_que_cargo && { id_profesor_que_cargo: parseInt(id_profesor_que_cargo) })
+                ...(id_profesor_que_cargo && { id_profesor_que_cargo: parseInt(id_profesor_que_cargo) }),
+                ...(activo !== undefined && { activo }) // Allow updating active status explicitly
             },
             include: {
                 disciplinas: true,
