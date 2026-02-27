@@ -3,7 +3,7 @@ import { prisma } from '../config/prisma.js';
 const getClientes = async (req, res) => {
     try {
         const clientes = await prisma.clientes.findMany({
-            where: { },
+            where: {},
             include: {
                 disciplinas: true,
                 profesores: true,
@@ -17,7 +17,7 @@ const getClientes = async (req, res) => {
     }
 };
 
-const getClienteById = async (req, res) => {   
+const getClienteById = async (req, res) => {
     const { id } = req.params;
     try {
         const cliente = await prisma.clientes.findUnique({
@@ -41,7 +41,7 @@ const getClienteById = async (req, res) => {
 const createCliente = async (req, res) => {
     try {
         const { nombre, apellido, dni, fecha_nacimiento, grupo_sanguineo, id_disciplina, id_profesor_que_cargo } = req.body;
-        
+
         if (!nombre || !apellido || !id_disciplina) {
             return res.status(400).json({ error: 'Faltan campos requeridos' });
         }
@@ -62,7 +62,7 @@ const createCliente = async (req, res) => {
                 profesores: true
             }
         });
-        
+
         res.status(201).json(cliente);
     } catch (error) {
         console.error(error);
@@ -73,16 +73,16 @@ const createCliente = async (req, res) => {
 const updateCliente = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, apellido, dni, fecha_nacimiento, grupo_sanguineo, id_disciplina, id_profesor_que_cargo, activo } = req.body;
-        
+        const { nombre, apellido, dni, fecha_nacimiento, grupo_sanguineo, id_disciplina, id_profesor_que_cargo, activo, fecha_ultimo_pago } = req.body;
+
         const cliente = await prisma.clientes.findUnique({
             where: { id_cliente: parseInt(id) }
         });
-        
+
         if (!cliente) {
             return res.status(404).json({ error: 'Cliente no encontrado' });
         }
-        
+
         const clienteActualizado = await prisma.clientes.update({
             where: { id_cliente: parseInt(id) },
             data: {
@@ -93,14 +93,18 @@ const updateCliente = async (req, res) => {
                 ...(grupo_sanguineo && { grupo_sanguineo }),
                 ...(id_disciplina && { id_disciplina }),
                 ...(id_profesor_que_cargo && { id_profesor_que_cargo: parseInt(id_profesor_que_cargo) }),
-                ...(activo !== undefined && { activo }) // Allow updating active status explicitly
+                ...(activo !== undefined && { activo }),
+                // Allow setting fecha_ultimo_pago to a date or null explicitly
+                ...(fecha_ultimo_pago !== undefined && {
+                    fecha_ultimo_pago: fecha_ultimo_pago ? new Date(fecha_ultimo_pago) : null
+                }),
             },
             include: {
                 disciplinas: true,
                 profesores: true
             }
         });
-        
+
         res.json(clienteActualizado);
     } catch (error) {
         console.error(error);
@@ -108,25 +112,30 @@ const updateCliente = async (req, res) => {
     }
 };
 
+
 const deleteCliente = async (req, res) => {
     try {
         const { id } = req.params;
-        
+        const clienteId = parseInt(id);
+
         const cliente = await prisma.clientes.findUnique({
-            where: { id_cliente: parseInt(id) }
+            where: { id_cliente: clienteId }
         });
-        
-        if (!cliente || !cliente.activo) {
+
+        if (!cliente) {
             return res.status(404).json({ error: 'Cliente no encontrado' });
         }
-        
-        // Borrado lógico
-        const clienteEliminado = await prisma.clientes.update({
-            where: { id_cliente: parseInt(id) },
-            data: { activo: false }
+
+        // Hard delete: first remove related pagos (FK NoAction constraint), then delete cliente
+        await prisma.pagos.deleteMany({
+            where: { id_cliente: clienteId }
         });
-        
-        res.json({ message: 'Cliente eliminado correctamente', cliente: clienteEliminado });
+
+        await prisma.clientes.delete({
+            where: { id_cliente: clienteId }
+        });
+
+        res.json({ message: 'Cliente eliminado correctamente' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error al eliminar el cliente' });
