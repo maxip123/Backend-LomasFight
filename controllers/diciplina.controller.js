@@ -21,15 +21,36 @@ const getDisciplinas = async (req, res) => {
 const getDisciplinaById = async (req, res) => {   
     const { id } = req.params;
     try {
-        const disciplina = await prisma.disciplinas.findUnique({
-            where: { id_disciplina: parseInt(id) },
-            include: {
-                clientes: true,
-                horarios: true,
-                pagos: true,
-                profesores: true
-            }
-        });
+        let disciplina = null;
+        
+        // Verificamos si el parámetro es un número
+        if (!isNaN(id)) {
+            // Es un número, buscamos por ID
+            disciplina = await prisma.disciplinas.findUnique({
+                where: { id_disciplina: parseInt(id) },
+                include: {
+                    clientes: true,
+                    horarios: true,
+                    pagos: true,
+                    profesores: true
+                }
+            });
+        } else {
+            // Es un texto, buscamos por nombre. Como no tiene @unique usamos findFirst.
+            disciplina = await prisma.disciplinas.findFirst({
+                where: { 
+                    nombre_disciplina: { equals: id, mode: 'insensitive' },
+                    activo: true 
+                },
+                include: {
+                    clientes: true,
+                    horarios: true,
+                    pagos: true,
+                    profesores: true
+                }
+            });
+        }
+
         if (!disciplina || !disciplina.activo) {
             return res.status(404).json({ error: 'Disciplina no encontrada' });
         }
