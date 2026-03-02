@@ -40,7 +40,7 @@ const getProfesorById = async (req, res) => {
 
 const createProfesor = async (req, res) => {
     try {
-        const { nombre, apellido, id_disciplina } = req.body;
+        const { nombre, apellido, id_disciplina, descripcion } = req.body;
         
         if (!nombre || !apellido || !id_disciplina) {
             return res.status(400).json({ error: 'Faltan campos requeridos' });
@@ -51,6 +51,7 @@ const createProfesor = async (req, res) => {
                 nombre,
                 apellido,
                 id_disciplina: parseInt(id_disciplina),
+                descripcion,
                 activo: true
             },
             include: {
@@ -68,7 +69,7 @@ const createProfesor = async (req, res) => {
 const updateProfesor = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, apellido, id_disciplina } = req.body;
+        const { nombre, apellido, id_disciplina, descripcion } = req.body;
         
         const profesor = await prisma.profesores.findUnique({
             where: { id_profesor: parseInt(id) }
@@ -83,7 +84,8 @@ const updateProfesor = async (req, res) => {
             data: {
                 ...(nombre && { nombre }),
                 ...(apellido && { apellido }),
-                ...(id_disciplina && { id_disciplina: parseInt(id_disciplina) })
+                ...(id_disciplina && { id_disciplina: parseInt(id_disciplina) }),
+                ...(descripcion !== undefined && { descripcion })
             },
             include: {
                 disciplinas: true
