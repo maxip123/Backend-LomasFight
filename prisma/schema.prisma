@@ -65,6 +65,7 @@ model profesores {
   apellido      String      @db.VarChar(100)
   id_disciplina Int
   descripcion   String?
+  imagen        String?     @db.VarChar(255)
   activo        Boolean?    @default(true)
   clientes      clientes[]
   horarios      horarios[]
