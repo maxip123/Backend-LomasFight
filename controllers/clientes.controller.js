@@ -3,7 +3,7 @@ import { prisma } from '../config/prisma.js';
 const getClientes = async (req, res) => {
     try {
         const clientes = await prisma.clientes.findMany({
-            where: {},
+            where: { activo: true }, // activo=false = borrado lógico
             include: {
                 disciplinas: true,
                 profesores: true,
@@ -73,7 +73,7 @@ const createCliente = async (req, res) => {
 const updateCliente = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, apellido, dni, fecha_nacimiento, grupo_sanguineo, id_disciplina, id_profesor_que_cargo, activo, fecha_ultimo_pago } = req.body;
+        const { nombre, apellido, dni, fecha_nacimiento, grupo_sanguineo, id_disciplina, id_profesor_que_cargo, activo, inactivo, fecha_ultimo_pago } = req.body;
 
         const cliente = await prisma.clientes.findUnique({
             where: { id_cliente: parseInt(id) }
@@ -94,7 +94,7 @@ const updateCliente = async (req, res) => {
                 ...(id_disciplina && { id_disciplina }),
                 ...(id_profesor_que_cargo && { id_profesor_que_cargo: parseInt(id_profesor_que_cargo) }),
                 ...(activo !== undefined && { activo }),
-                // Allow setting fecha_ultimo_pago to a date or null explicitly
+                ...(inactivo !== undefined && { inactivo }), // nuevo campo estado inactivo
                 ...(fecha_ultimo_pago !== undefined && {
                     fecha_ultimo_pago: fecha_ultimo_pago ? new Date(fecha_ultimo_pago) : null
                 }),
@@ -126,13 +126,10 @@ const deleteCliente = async (req, res) => {
             return res.status(404).json({ error: 'Cliente no encontrado' });
         }
 
-        // Hard delete: first remove related pagos (FK NoAction constraint), then delete cliente
-        await prisma.pagos.deleteMany({
-            where: { id_cliente: clienteId }
-        });
-
-        await prisma.clientes.delete({
-            where: { id_cliente: clienteId }
+        // Borrado lógico: activo=false, el cliente desaparece de la lista pero sus pagos se conservan
+        await prisma.clientes.update({
+            where: { id_cliente: clienteId },
+            data: { activo: false }
         });
 
         res.json({ message: 'Cliente eliminado correctamente' });
