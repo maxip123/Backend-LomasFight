@@ -17,7 +17,7 @@ const getProfesores = async (req, res) => {
     }
 };
 
-const getProfesorById = async (req, res) => {   
+const getProfesorById = async (req, res) => {
     const { id } = req.params;
     try {
         const profesor = await prisma.profesores.findUnique({
@@ -40,8 +40,8 @@ const getProfesorById = async (req, res) => {
 
 const createProfesor = async (req, res) => {
     try {
-        const { nombre, apellido, id_disciplina } = req.body;
-        
+        const { nombre, apellido, id_disciplina, descripcion, imagen } = req.body;
+
         if (!nombre || !apellido || !id_disciplina) {
             return res.status(400).json({ error: 'Faltan campos requeridos' });
         }
@@ -51,13 +51,15 @@ const createProfesor = async (req, res) => {
                 nombre,
                 apellido,
                 id_disciplina: parseInt(id_disciplina),
+                descripcion,
+                imagen,
                 activo: true
             },
             include: {
                 disciplinas: true
             }
         });
-        
+
         res.status(201).json(profesor);
     } catch (error) {
         console.error(error);
@@ -68,28 +70,30 @@ const createProfesor = async (req, res) => {
 const updateProfesor = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, apellido, id_disciplina } = req.body;
-        
+        const { nombre, apellido, id_disciplina, descripcion, imagen } = req.body;
+
         const profesor = await prisma.profesores.findUnique({
             where: { id_profesor: parseInt(id) }
         });
-        
+
         if (!profesor || !profesor.activo) {
             return res.status(404).json({ error: 'Profesor no encontrado' });
         }
-        
+
         const profesorActualizado = await prisma.profesores.update({
             where: { id_profesor: parseInt(id) },
             data: {
                 ...(nombre && { nombre }),
                 ...(apellido && { apellido }),
-                ...(id_disciplina && { id_disciplina: parseInt(id_disciplina) })
+                ...(id_disciplina && { id_disciplina: parseInt(id_disciplina) }),
+                ...(descripcion !== undefined && { descripcion }),
+                ...(imagen !== undefined && { imagen })
             },
             include: {
                 disciplinas: true
             }
         });
-        
+
         res.json(profesorActualizado);
     } catch (error) {
         console.error(error);
@@ -100,21 +104,21 @@ const updateProfesor = async (req, res) => {
 const deleteProfesor = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const profesor = await prisma.profesores.findUnique({
             where: { id_profesor: parseInt(id) }
         });
-        
+
         if (!profesor || !profesor.activo) {
             return res.status(404).json({ error: 'Profesor no encontrado' });
         }
-        
+
         // Borrado lógico
         const profesorEliminado = await prisma.profesores.update({
             where: { id_profesor: parseInt(id) },
             data: { activo: false }
         });
-        
+
         res.json({ message: 'Profesor eliminado correctamente', profesor: profesorEliminado });
     } catch (error) {
         console.error(error);
