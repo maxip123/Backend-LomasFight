@@ -18,6 +18,7 @@ model clientes {
   id_profesor_que_cargo Int?
   fecha_ultimo_pago     DateTime?   @db.Date
   activo                Boolean?    @default(true)
+  inactivo              Boolean?    @default(false)
   disciplinas           disciplinas @relation(fields: [id_disciplina], references: [id_disciplina], onDelete: NoAction, onUpdate: NoAction, map: "fk_disciplina_cliente")
   profesores            profesores? @relation(fields: [id_profesor_que_cargo], references: [id_profesor], onDelete: NoAction, onUpdate: NoAction, map: "fk_profesor_cargo")
   pagos                 pagos[]
