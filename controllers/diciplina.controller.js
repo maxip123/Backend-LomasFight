@@ -63,7 +63,7 @@ const getDisciplinaById = async (req, res) => {
 
 const createDisciplina = async (req, res) => {
     try {
-        const { nombre_disciplina, cuota, descripcion, img_banner, img_preview } = req.body;
+        const { nombre_disciplina, cuota, descripcion, img_banner, img_preview, numero_celular } = req.body;
         
         if (!nombre_disciplina || !cuota) {
             return res.status(400).json({ error: 'Faltan campos requeridos' });
@@ -76,6 +76,7 @@ const createDisciplina = async (req, res) => {
                 descripcion,
                 img_banner,
                 img_preview,
+                numero_celular: numero_celular || null,
                 activo: true
             }
         });
@@ -90,7 +91,7 @@ const createDisciplina = async (req, res) => {
 const updateDisciplina = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre_disciplina, cuota, descripcion, img_banner, img_preview } = req.body;
+        const { nombre_disciplina, cuota, descripcion, img_banner, img_preview, numero_celular } = req.body;
         
         const disciplina = await prisma.disciplinas.findUnique({
             where: { id_disciplina: parseInt(id) }
@@ -106,8 +107,9 @@ const updateDisciplina = async (req, res) => {
                 ...(nombre_disciplina && { nombre_disciplina }),
                 ...(cuota && { cuota: parseFloat(cuota) }),
                 ...(descripcion && { descripcion }),
-                ...(img_banner && { img_banner }),
-                ...(img_preview && { img_preview })
+                ...(img_banner !== undefined && { img_banner }),
+                ...(img_preview !== undefined && { img_preview }),
+                ...(numero_celular !== undefined && { numero_celular: numero_celular || null })
             }
         });
         
