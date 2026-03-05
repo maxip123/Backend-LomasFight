@@ -1,14 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+// Patrón globalThis: evita múltiples instancias en hot-reload de desarrollo
+// y es compatible con el entorno serverless de Vercel
+const globalForPrisma = globalThis;
+const prisma = globalForPrisma.prisma ?? new PrismaClient();
 
-// Verificar conexión a la base de datos
-try {
-  await prisma.$connect();
-  console.log('✅ Conectado a la base de datos PostgreSQL');
-} catch (error) {
-  console.error('❌ Error conectando a la base de datos:', error.message);
-  process.exit(1);
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
 }
 
 export { prisma };
