@@ -21,7 +21,7 @@ app.use(morgan('dev'));
 
 // Whitelist de orígenes permitidos (solo el frontend)
 const allowedOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(',').map(o => o.trim())
+  ? process.env.FRONTEND_URL.split(',').map(o => o.trim().replace(/\/$/, ''))
   : [];
 
 app.use(cors({
