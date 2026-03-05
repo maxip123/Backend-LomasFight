@@ -18,11 +18,11 @@ const getDisciplinas = async (req, res) => {
     }
 };
 
-const getDisciplinaById = async (req, res) => {   
+const getDisciplinaById = async (req, res) => {
     const { id } = req.params;
     try {
         let disciplina = null;
-        
+
         // Verificamos si el parámetro es un número
         if (!isNaN(id)) {
             // Es un número, buscamos por ID
@@ -38,9 +38,9 @@ const getDisciplinaById = async (req, res) => {
         } else {
             // Es un texto, buscamos por nombre. Como no tiene @unique usamos findFirst.
             disciplina = await prisma.disciplinas.findFirst({
-                where: { 
+                where: {
                     nombre_disciplina: { equals: id, mode: 'insensitive' },
-                    activo: true 
+                    activo: true
                 },
                 include: {
                     clientes: true,
@@ -64,7 +64,7 @@ const getDisciplinaById = async (req, res) => {
 const createDisciplina = async (req, res) => {
     try {
         const { nombre_disciplina, cuota, descripcion, img_banner, img_preview, numero_celular } = req.body;
-        
+
         if (!nombre_disciplina || !cuota) {
             return res.status(400).json({ error: 'Faltan campos requeridos' });
         }
@@ -80,7 +80,7 @@ const createDisciplina = async (req, res) => {
                 activo: true
             }
         });
-        
+
         res.status(201).json(disciplina);
     } catch (error) {
         console.error(error);
@@ -92,15 +92,15 @@ const updateDisciplina = async (req, res) => {
     try {
         const { id } = req.params;
         const { nombre_disciplina, cuota, descripcion, img_banner, img_preview, numero_celular } = req.body;
-        
+
         const disciplina = await prisma.disciplinas.findUnique({
             where: { id_disciplina: parseInt(id) }
         });
-        
+
         if (!disciplina || !disciplina.activo) {
             return res.status(404).json({ error: 'Disciplina no encontrada' });
         }
-        
+
         const disciplinaActualizada = await prisma.disciplinas.update({
             where: { id_disciplina: parseInt(id) },
             data: {
@@ -112,7 +112,7 @@ const updateDisciplina = async (req, res) => {
                 ...(numero_celular !== undefined && { numero_celular: numero_celular || null })
             }
         });
-        
+
         res.json(disciplinaActualizada);
     } catch (error) {
         console.error(error);
@@ -123,21 +123,21 @@ const updateDisciplina = async (req, res) => {
 const deleteDisciplina = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const disciplina = await prisma.disciplinas.findUnique({
             where: { id_disciplina: parseInt(id) }
         });
-        
+
         if (!disciplina || !disciplina.activo) {
             return res.status(404).json({ error: 'Disciplina no encontrada' });
         }
-        
+
         // Borrado lógico
         const disciplinaEliminada = await prisma.disciplinas.update({
             where: { id_disciplina: parseInt(id) },
             data: { activo: false }
         });
-        
+
         res.json({ message: 'Disciplina eliminada correctamente', disciplina: disciplinaEliminada });
     } catch (error) {
         console.error(error);

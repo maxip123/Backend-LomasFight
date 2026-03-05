@@ -31,6 +31,7 @@ model disciplinas {
   descripcion       String?
   img_banner        String?      @db.VarChar(255)
   img_preview       String?      @db.VarChar(255)
+  numero_celular    String?      @db.VarChar(50)
   activo            Boolean?     @default(true)
   clientes          clientes[]
   horarios          horarios[]
