@@ -14,6 +14,7 @@ model clientes {
   dni                   String?     @unique @db.VarChar(20)
   fecha_nacimiento      DateTime?   @db.Date
   grupo_sanguineo       String?     @db.VarChar(10)
+  domicilio             String?     @db.VarChar(255)
   id_disciplina         Int
   id_profesor_que_cargo Int?
   fecha_ultimo_pago     DateTime?   @db.Date
