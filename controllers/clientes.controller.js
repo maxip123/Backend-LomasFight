@@ -40,7 +40,7 @@ const getClienteById = async (req, res) => {
 
 const createCliente = async (req, res) => {
     try {
-        const { nombre, apellido, dni, fecha_nacimiento, grupo_sanguineo, id_disciplina, id_profesor_que_cargo } = req.body;
+        const { nombre, apellido, dni, fecha_nacimiento, grupo_sanguineo, domicilio, id_disciplina, id_profesor_que_cargo } = req.body;
 
         if (!nombre || !apellido || !id_disciplina) {
             return res.status(400).json({ error: 'Faltan campos requeridos' });
@@ -53,6 +53,7 @@ const createCliente = async (req, res) => {
                 dni,
                 fecha_nacimiento: fecha_nacimiento ? new Date(fecha_nacimiento) : null,
                 grupo_sanguineo,
+                domicilio: domicilio || null,
                 id_disciplina,
                 id_profesor_que_cargo: id_profesor_que_cargo ? parseInt(id_profesor_que_cargo) : null,
                 activo: true
@@ -73,7 +74,7 @@ const createCliente = async (req, res) => {
 const updateCliente = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, apellido, dni, fecha_nacimiento, grupo_sanguineo, id_disciplina, id_profesor_que_cargo, activo, inactivo, fecha_ultimo_pago } = req.body;
+        const { nombre, apellido, dni, fecha_nacimiento, grupo_sanguineo, domicilio, id_disciplina, id_profesor_que_cargo, activo, inactivo, fecha_ultimo_pago } = req.body;
 
         const cliente = await prisma.clientes.findUnique({
             where: { id_cliente: parseInt(id) }
@@ -91,6 +92,7 @@ const updateCliente = async (req, res) => {
                 ...(dni && { dni }),
                 ...(fecha_nacimiento && { fecha_nacimiento: new Date(fecha_nacimiento) }),
                 ...(grupo_sanguineo && { grupo_sanguineo }),
+                ...(domicilio !== undefined && { domicilio: domicilio || null }),
                 ...(id_disciplina && { id_disciplina }),
                 ...(id_profesor_que_cargo && { id_profesor_que_cargo: parseInt(id_profesor_que_cargo) }),
                 ...(activo !== undefined && { activo }),
