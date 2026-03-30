@@ -135,7 +135,7 @@ const createUsuario = async (req, res) => {
 const updateUsuario = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre_usuario, mail_usuario, rol } = req.body;
+        const { nombre_usuario, mail_usuario, rol, contrasena_usuario } = req.body;
         
         const usuario = await prisma.usuarios.findUnique({
             where: { id_usuario: parseInt(id) }
@@ -144,13 +144,21 @@ const updateUsuario = async (req, res) => {
         if (!usuario || !usuario.activo) {
             return res.status(404).json({ error: 'Usuario no encontrado' });
         }
+
+        // Si se envía una nueva contraseña, hashearla
+        let contrasenaHasheada;
+        if (contrasena_usuario) {
+            const saltRounds = 10;
+            contrasenaHasheada = await bcrypt.hash(contrasena_usuario, saltRounds);
+        }
         
         const usuarioActualizado = await prisma.usuarios.update({
             where: { id_usuario: parseInt(id) },
             data: {
                 ...(nombre_usuario && { nombre_usuario }),
                 ...(mail_usuario && { mail_usuario }),
-                ...(rol && { rol })
+                ...(rol && { rol }),
+                ...(contrasenaHasheada && { contrasena_usuario: contrasenaHasheada })
             },
             select: {
                 id_usuario: true,
