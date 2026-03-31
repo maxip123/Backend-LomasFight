@@ -73,15 +73,18 @@ model profesores {
   clientes      clientes[]
   horarios      horarios[]
   disciplinas   disciplinas @relation(fields: [id_disciplina], references: [id_disciplina], onDelete: NoAction, onUpdate: NoAction, map: "fk_disciplina_profesor")
+  usuarios      usuarios[]
 }
 
 model usuarios {
-  id_usuario         Int      @id @default(autoincrement())
-  rol                String   @db.VarChar(50)
-  nombre_usuario     String   @db.VarChar(150)
-  mail_usuario       String   @unique @db.VarChar(255)
-  contrasena_usuario String   @db.VarChar(255)
-  activo             Boolean? @default(true)
+  id_usuario         Int          @id @default(autoincrement())
+  rol                String       @db.VarChar(50)
+  nombre_usuario     String       @db.VarChar(150)
+  mail_usuario       String       @unique @db.VarChar(255)
+  contrasena_usuario String       @db.VarChar(255)
+  activo             Boolean?     @default(true)
+  id_profesor        Int?
+  profesores         profesores?  @relation(fields: [id_profesor], references: [id_profesor], onDelete: SetNull, onUpdate: Cascade, map: "fk_usuario_profesor")
 }
 
 model pago_disciplina {

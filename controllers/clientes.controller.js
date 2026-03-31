@@ -2,8 +2,16 @@ import { prisma } from '../config/prisma.js';
 
 const getClientes = async (req, res) => {
     try {
+        const { id_profesor } = req.query;
+        const whereClause = { activo: true };
+        
+        // Si se pasa id_profesor, filtrar alumnos por profesor
+        if (id_profesor) {
+            whereClause.id_profesor_que_cargo = parseInt(id_profesor);
+        }
+
         const clientes = await prisma.clientes.findMany({
-            where: { activo: true }, // activo=false = borrado lógico
+            where: whereClause,
             include: {
                 disciplinas: true,
                 profesores: true,
