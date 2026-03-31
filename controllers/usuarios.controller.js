@@ -36,7 +36,8 @@ const loginUsuario = async (req, res) => {
                 id_usuario: usuario.id_usuario,
                 nombre_usuario: usuario.nombre_usuario,
                 mail_usuario: usuario.mail_usuario,
-                rol: usuario.rol
+                rol: usuario.rol,
+                id_profesor: usuario.id_profesor || null
             }
         });
     } catch (error) {
@@ -54,7 +55,8 @@ const getUsuarios = async (req, res) => {
                 nombre_usuario: true,
                 mail_usuario: true,
                 rol: true,
-                activo: true
+                activo: true,
+                id_profesor: true
             }
         });
         res.json(usuarios);
@@ -74,7 +76,8 @@ const getUsuarioById = async (req, res) => {
                 nombre_usuario: true,
                 mail_usuario: true,
                 rol: true,
-                activo: true
+                activo: true,
+                id_profesor: true
             }
         });
         if (!usuario || !usuario.activo) {
@@ -89,7 +92,7 @@ const getUsuarioById = async (req, res) => {
 
 const createUsuario = async (req, res) => {
     try {
-        const { nombre_usuario, mail_usuario, contrasena_usuario, rol } = req.body;
+        const { nombre_usuario, mail_usuario, contrasena_usuario, rol, id_profesor } = req.body;
         
         if (!nombre_usuario || !mail_usuario || !contrasena_usuario || !rol) {
             return res.status(400).json({ error: 'Faltan campos requeridos' });
@@ -114,6 +117,7 @@ const createUsuario = async (req, res) => {
                 mail_usuario,
                 contrasena_usuario: contrasenaHasheada,
                 rol,
+                id_profesor: id_profesor ? parseInt(id_profesor) : null,
                 activo: true
             },
             select: {
@@ -121,7 +125,8 @@ const createUsuario = async (req, res) => {
                 nombre_usuario: true,
                 mail_usuario: true,
                 rol: true,
-                activo: true
+                activo: true,
+                id_profesor: true
             }
         });
         
@@ -135,7 +140,7 @@ const createUsuario = async (req, res) => {
 const updateUsuario = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre_usuario, mail_usuario, rol, contrasena_usuario } = req.body;
+        const { nombre_usuario, mail_usuario, rol, contrasena_usuario, id_profesor } = req.body;
         
         const usuario = await prisma.usuarios.findUnique({
             where: { id_usuario: parseInt(id) }
@@ -158,14 +163,16 @@ const updateUsuario = async (req, res) => {
                 ...(nombre_usuario && { nombre_usuario }),
                 ...(mail_usuario && { mail_usuario }),
                 ...(rol && { rol }),
-                ...(contrasenaHasheada && { contrasena_usuario: contrasenaHasheada })
+                ...(contrasenaHasheada && { contrasena_usuario: contrasenaHasheada }),
+                ...(id_profesor !== undefined && { id_profesor: id_profesor ? parseInt(id_profesor) : null })
             },
             select: {
                 id_usuario: true,
                 nombre_usuario: true,
                 mail_usuario: true,
                 rol: true,
-                activo: true
+                activo: true,
+                id_profesor: true
             }
         });
         
