@@ -12,6 +12,7 @@ import pagosRoute from './routes/pagos.route.js';
 import profesoresRoute from './routes/profesores.route.js';
 import usuariosRoute from './routes/usuarios.route.js';
 import pagoDisciplinaRoute from './routes/pago_disciplina.route.js';
+import gastosRoute from './routes/gastos.route.js';
 
 const app = express();
 
@@ -51,6 +52,7 @@ app.use('/api/pagos', pagosRoute);
 app.use('/api/profesores', profesoresRoute);
 app.use('/api/usuarios', usuariosRoute);
 app.use('/api/pago-disciplina', pagoDisciplinaRoute);
+app.use('/api/gastos', gastosRoute);
 
 // Ruta de prueba
 app.get('/', (req, res) => {

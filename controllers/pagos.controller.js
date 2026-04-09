@@ -44,17 +44,52 @@ const createPago = async (req, res) => {
             return res.status(400).json({ error: 'Faltan campos requeridos' });
         }
 
+        const clienteId = parseInt(id_cliente);
+        const ahora = new Date();
+
+        // Buscar cliente para calcular fecha_vencimiento
+        const cliente = await prisma.clientes.findUnique({
+            where: { id_cliente: clienteId }
+        });
+
+        // Calcular nueva fecha de vencimiento
+        let nuevaFechaVencimiento;
+        if (cliente && cliente.inactivo) {
+            // Si está inactivo: resetear desde hoy + 31 días
+            nuevaFechaVencimiento = new Date(ahora);
+            nuevaFechaVencimiento.setDate(nuevaFechaVencimiento.getDate() + 31);
+        } else if (cliente && cliente.fecha_vencimiento) {
+            // Si está activo y tiene fecha de vencimiento previa: sumar 31 días desde la fecha de vencimiento anterior
+            nuevaFechaVencimiento = new Date(cliente.fecha_vencimiento);
+            nuevaFechaVencimiento.setDate(nuevaFechaVencimiento.getDate() + 31);
+        } else {
+            // Si no tiene fecha de vencimiento previa: hoy + 31 días
+            nuevaFechaVencimiento = new Date(ahora);
+            nuevaFechaVencimiento.setDate(nuevaFechaVencimiento.getDate() + 31);
+        }
+
+        // Crear el pago
         const pago = await prisma.pagos.create({
             data: {
-                id_cliente: parseInt(id_cliente),
+                id_cliente: clienteId,
                 id_disciplina: parseInt(id_disciplina),
                 monto: parseFloat(monto),
-                fecha_pago: new Date(),
+                fecha_pago: ahora,
                 activo: true
             },
             include: {
                 clientes: true,
                 disciplinas: true
+            }
+        });
+
+        // Actualizar cliente: fecha_ultimo_pago, fecha_vencimiento, y marcar como activo
+        await prisma.clientes.update({
+            where: { id_cliente: clienteId },
+            data: {
+                fecha_ultimo_pago: ahora,
+                fecha_vencimiento: nuevaFechaVencimiento,
+                inactivo: false
             }
         });
         
