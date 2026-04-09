@@ -82,7 +82,7 @@ const createCliente = async (req, res) => {
 const updateCliente = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, apellido, dni, fecha_nacimiento, grupo_sanguineo, domicilio, id_disciplina, id_profesor_que_cargo, activo, inactivo, fecha_ultimo_pago } = req.body;
+        const { nombre, apellido, dni, fecha_nacimiento, grupo_sanguineo, domicilio, id_disciplina, id_profesor_que_cargo, activo, inactivo, fecha_ultimo_pago, fecha_vencimiento } = req.body;
 
         const cliente = await prisma.clientes.findUnique({
             where: { id_cliente: parseInt(id) }
@@ -107,6 +107,9 @@ const updateCliente = async (req, res) => {
                 ...(inactivo !== undefined && { inactivo }), // nuevo campo estado inactivo
                 ...(fecha_ultimo_pago !== undefined && {
                     fecha_ultimo_pago: fecha_ultimo_pago ? new Date(fecha_ultimo_pago) : null
+                }),
+                ...(fecha_vencimiento !== undefined && {
+                    fecha_vencimiento: fecha_vencimiento ? new Date(fecha_vencimiento) : null
                 }),
             },
             include: {

@@ -1,12 +1,13 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
 }
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
 model clientes {
   id_cliente            Int         @id @default(autoincrement())
   nombre                String      @db.VarChar(100)
@@ -14,30 +15,31 @@ model clientes {
   dni                   String?     @unique @db.VarChar(20)
   fecha_nacimiento      DateTime?   @db.Date
   grupo_sanguineo       String?     @db.VarChar(10)
-  domicilio             String?     @db.VarChar(255)
   id_disciplina         Int
   id_profesor_que_cargo Int?
   fecha_ultimo_pago     DateTime?   @db.Date
   activo                Boolean?    @default(true)
   inactivo              Boolean?    @default(false)
+  domicilio             String?     @db.VarChar(255)
+  fecha_vencimiento     DateTime?   @db.Date
   disciplinas           disciplinas @relation(fields: [id_disciplina], references: [id_disciplina], onDelete: NoAction, onUpdate: NoAction, map: "fk_disciplina_cliente")
   profesores            profesores? @relation(fields: [id_profesor_que_cargo], references: [id_profesor], onDelete: NoAction, onUpdate: NoAction, map: "fk_profesor_cargo")
   pagos                 pagos[]
 }
 
 model disciplinas {
-  id_disciplina     Int          @id @default(autoincrement())
-  nombre_disciplina String       @db.VarChar(150)
-  cuota             Decimal      @db.Decimal(10, 2)
+  id_disciplina     Int               @id @default(autoincrement())
+  nombre_disciplina String            @db.VarChar(150)
+  cuota             Decimal           @db.Decimal(10, 2)
   descripcion       String?
-  img_banner        String?      @db.VarChar(255)
-  img_preview       String?      @db.VarChar(255)
-  numero_celular    String?      @db.VarChar(50)
-  activo            Boolean?     @default(true)
+  img_banner        String?           @db.VarChar(255)
+  img_preview       String?           @db.VarChar(255)
+  activo            Boolean?          @default(true)
+  numero_celular    String?           @db.VarChar(50)
   clientes          clientes[]
   horarios          horarios[]
-  pagos             pagos[]
   pago_disciplina   pago_disciplina[]
+  pagos             pagos[]
   profesores        profesores[]
 }
 
@@ -67,9 +69,9 @@ model profesores {
   nombre        String      @db.VarChar(100)
   apellido      String      @db.VarChar(100)
   id_disciplina Int
+  activo        Boolean?    @default(true)
   descripcion   String?
   imagen        String?     @db.VarChar(255)
-  activo        Boolean?    @default(true)
   clientes      clientes[]
   horarios      horarios[]
   disciplinas   disciplinas @relation(fields: [id_disciplina], references: [id_disciplina], onDelete: NoAction, onUpdate: NoAction, map: "fk_disciplina_profesor")
@@ -77,14 +79,14 @@ model profesores {
 }
 
 model usuarios {
-  id_usuario         Int          @id @default(autoincrement())
-  rol                String       @db.VarChar(50)
-  nombre_usuario     String       @db.VarChar(150)
-  mail_usuario       String       @unique @db.VarChar(255)
-  contrasena_usuario String       @db.VarChar(255)
-  activo             Boolean?     @default(true)
+  id_usuario         Int         @id @default(autoincrement())
+  rol                String      @db.VarChar(50)
+  nombre_usuario     String      @db.VarChar(150)
+  mail_usuario       String      @unique @db.VarChar(255)
+  contrasena_usuario String      @db.VarChar(255)
+  activo             Boolean?    @default(true)
   id_profesor        Int?
-  profesores         profesores?  @relation(fields: [id_profesor], references: [id_profesor], onDelete: SetNull, onUpdate: Cascade, map: "fk_usuario_profesor")
+  profesores         profesores? @relation(fields: [id_profesor], references: [id_profesor], map: "fk_usuario_profesor")
 }
 
 model pago_disciplina {
@@ -95,4 +97,12 @@ model pago_disciplina {
   periodo_pagado     DateTime?   @db.Date
   activo             Boolean?    @default(true)
   disciplinas        disciplinas @relation(fields: [id_disciplina], references: [id_disciplina], onDelete: NoAction, onUpdate: NoAction, map: "fk_disciplina_pago_ope")
+}
+
+model gastos {
+  id_gasto    Int       @id @default(autoincrement())
+  concepto    String    @db.VarChar(255)
+  monto       Decimal   @db.Decimal(10, 2)
+  fecha_gasto DateTime? @default(now()) @db.Timestamptz(6)
+  activo      Boolean?  @default(true)
 }
