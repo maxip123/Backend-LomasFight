@@ -31,7 +31,7 @@ const getGastoById = async (req, res) => {
 
 const createGasto = async (req, res) => {
     try {
-        const { concepto, monto } = req.body;
+        const { concepto, monto, fecha_gasto } = req.body;
 
         if (!concepto || !monto) {
             return res.status(400).json({ error: 'Faltan campos requeridos (concepto, monto)' });
@@ -41,7 +41,7 @@ const createGasto = async (req, res) => {
             data: {
                 concepto,
                 monto: parseFloat(monto),
-                fecha_gasto: new Date(),
+                fecha_gasto: fecha_gasto ? new Date(fecha_gasto) : new Date(),
                 activo: true
             }
         });
