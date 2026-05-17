@@ -38,35 +38,24 @@ const getPagoById = async (req, res) => {
 
 const createPago = async (req, res) => {
     try {
-        const { id_cliente, id_disciplina, monto } = req.body;
+        const { id_cliente, id_disciplina, monto, fecha_pago } = req.body;
         
         if (!id_cliente || !id_disciplina || !monto) {
             return res.status(400).json({ error: 'Faltan campos requeridos' });
         }
 
         const clienteId = parseInt(id_cliente);
-        const ahora = new Date();
+        // Usar la fecha enviada desde el frontend; si no viene, usar ahora
+        const fechaBase = fecha_pago ? new Date(fecha_pago) : new Date();
 
         // Buscar cliente para calcular fecha_vencimiento
         const cliente = await prisma.clientes.findUnique({
             where: { id_cliente: clienteId }
         });
 
-        // Calcular nueva fecha de vencimiento
-        let nuevaFechaVencimiento;
-        if (cliente && cliente.inactivo) {
-            // Si está inactivo: resetear desde hoy + 31 días
-            nuevaFechaVencimiento = new Date(ahora);
-            nuevaFechaVencimiento.setDate(nuevaFechaVencimiento.getDate() + 31);
-        } else if (cliente && cliente.fecha_vencimiento) {
-            // Si está activo y tiene fecha de vencimiento previa: sumar 31 días desde la fecha de vencimiento anterior
-            nuevaFechaVencimiento = new Date(cliente.fecha_vencimiento);
-            nuevaFechaVencimiento.setDate(nuevaFechaVencimiento.getDate() + 31);
-        } else {
-            // Si no tiene fecha de vencimiento previa: hoy + 31 días
-            nuevaFechaVencimiento = new Date(ahora);
-            nuevaFechaVencimiento.setDate(nuevaFechaVencimiento.getDate() + 31);
-        }
+        // Calcular nueva fecha de vencimiento: siempre desde la fecha elegida + 31 días
+        const nuevaFechaVencimiento = new Date(fechaBase);
+        nuevaFechaVencimiento.setDate(nuevaFechaVencimiento.getDate() + 31);
 
         // Crear el pago
         const pago = await prisma.pagos.create({
@@ -74,7 +63,7 @@ const createPago = async (req, res) => {
                 id_cliente: clienteId,
                 id_disciplina: parseInt(id_disciplina),
                 monto: parseFloat(monto),
-                fecha_pago: ahora,
+                fecha_pago: fechaBase,
                 activo: true
             },
             include: {
@@ -87,7 +76,7 @@ const createPago = async (req, res) => {
         await prisma.clientes.update({
             where: { id_cliente: clienteId },
             data: {
-                fecha_ultimo_pago: ahora,
+                fecha_ultimo_pago: fechaBase,
                 fecha_vencimiento: nuevaFechaVencimiento,
                 inactivo: false
             }
