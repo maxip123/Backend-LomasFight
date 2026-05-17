@@ -102,7 +102,7 @@ const updateCliente = async (req, res) => {
                 ...(grupo_sanguineo && { grupo_sanguineo }),
                 ...(domicilio !== undefined && { domicilio: domicilio || null }),
                 ...(id_disciplina && { id_disciplina }),
-                ...(id_profesor_que_cargo && { id_profesor_que_cargo: parseInt(id_profesor_que_cargo) }),
+                ...(id_profesor_que_cargo !== undefined && { id_profesor_que_cargo: id_profesor_que_cargo ? parseInt(id_profesor_que_cargo) : null }),
                 ...(activo !== undefined && { activo }),
                 ...(inactivo !== undefined && { inactivo }), // nuevo campo estado inactivo
                 ...(fecha_ultimo_pago !== undefined && {
