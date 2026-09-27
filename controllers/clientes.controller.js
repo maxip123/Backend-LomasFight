@@ -48,7 +48,20 @@ const getClienteById = async (req, res) => {
 
 const createCliente = async (req, res) => {
     try {
-        const { nombre, apellido, dni, fecha_nacimiento, grupo_sanguineo, domicilio, id_disciplina, id_profesor_que_cargo } = req.body;
+        const {
+            nombre,
+            apellido,
+            dni,
+            fecha_nacimiento,
+            grupo_sanguineo,
+            domicilio,
+            id_disciplina,
+            id_profesor_que_cargo,
+            numero_celular,
+            numero_celular_emergencia,
+            alergia_medicamento,
+            tiempo_entrenamiento
+        } = req.body;
 
         if (!nombre || !apellido || !id_disciplina) {
             return res.status(400).json({ error: 'Faltan campos requeridos' });
@@ -58,12 +71,16 @@ const createCliente = async (req, res) => {
             data: {
                 nombre,
                 apellido,
-                dni,
+                dni: dni || null,
                 fecha_nacimiento: fecha_nacimiento ? new Date(fecha_nacimiento) : null,
-                grupo_sanguineo,
+                grupo_sanguineo: grupo_sanguineo || null,
                 domicilio: domicilio || null,
                 id_disciplina,
                 id_profesor_que_cargo: id_profesor_que_cargo ? parseInt(id_profesor_que_cargo) : null,
+                numero_celular: numero_celular || null,
+                numero_celular_emergencia: numero_celular_emergencia || null,
+                alergia_medicamento: alergia_medicamento || null,
+                tiempo_entrenamiento: tiempo_entrenamiento || null,
                 activo: true
             },
             include: {
@@ -82,7 +99,24 @@ const createCliente = async (req, res) => {
 const updateCliente = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, apellido, dni, fecha_nacimiento, grupo_sanguineo, domicilio, id_disciplina, id_profesor_que_cargo, activo, inactivo, fecha_ultimo_pago, fecha_vencimiento } = req.body;
+        const {
+            nombre,
+            apellido,
+            dni,
+            fecha_nacimiento,
+            grupo_sanguineo,
+            domicilio,
+            id_disciplina,
+            id_profesor_que_cargo,
+            activo,
+            inactivo,
+            fecha_ultimo_pago,
+            fecha_vencimiento,
+            numero_celular,
+            numero_celular_emergencia,
+            alergia_medicamento,
+            tiempo_entrenamiento
+        } = req.body;
 
         const cliente = await prisma.clientes.findUnique({
             where: { id_cliente: parseInt(id) }
@@ -97,9 +131,9 @@ const updateCliente = async (req, res) => {
             data: {
                 ...(nombre && { nombre }),
                 ...(apellido && { apellido }),
-                ...(dni && { dni }),
-                ...(fecha_nacimiento && { fecha_nacimiento: new Date(fecha_nacimiento) }),
-                ...(grupo_sanguineo && { grupo_sanguineo }),
+                ...(dni !== undefined && { dni: dni || null }),
+                ...(fecha_nacimiento !== undefined && { fecha_nacimiento: fecha_nacimiento ? new Date(fecha_nacimiento) : null }),
+                ...(grupo_sanguineo !== undefined && { grupo_sanguineo: grupo_sanguineo || null }),
                 ...(domicilio !== undefined && { domicilio: domicilio || null }),
                 ...(id_disciplina && { id_disciplina }),
                 ...(id_profesor_que_cargo !== undefined && { id_profesor_que_cargo: id_profesor_que_cargo ? parseInt(id_profesor_que_cargo) : null }),
@@ -111,6 +145,10 @@ const updateCliente = async (req, res) => {
                 ...(fecha_vencimiento !== undefined && {
                     fecha_vencimiento: fecha_vencimiento ? new Date(fecha_vencimiento) : null
                 }),
+                ...(numero_celular !== undefined && { numero_celular: numero_celular || null }),
+                ...(numero_celular_emergencia !== undefined && { numero_celular_emergencia: numero_celular_emergencia || null }),
+                ...(alergia_medicamento !== undefined && { alergia_medicamento: alergia_medicamento || null }),
+                ...(tiempo_entrenamiento !== undefined && { tiempo_entrenamiento: tiempo_entrenamiento || null }),
             },
             include: {
                 disciplinas: true,

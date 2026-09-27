@@ -22,3 +22,11 @@ SET fecha_vencimiento = fecha_ultimo_pago + INTERVAL '31 days'
 WHERE fecha_ultimo_pago IS NOT NULL
   AND fecha_vencimiento IS NULL
   AND activo = true;
+
+-- 4. Agregar columnas de contacto, salud y entrenamiento a clientes
+ALTER TABLE clientes
+  ADD COLUMN IF NOT EXISTS numero_celular         VARCHAR(30),
+  ADD COLUMN IF NOT EXISTS numero_celular_emergencia VARCHAR(30),
+  ADD COLUMN IF NOT EXISTS alergia_medicamento    TEXT,
+  ADD COLUMN IF NOT EXISTS tiempo_entrenamiento   VARCHAR(100);
+
