@@ -9,22 +9,26 @@ datasource db {
 }
 
 model clientes {
-  id_cliente            Int         @id @default(autoincrement())
-  nombre                String      @db.VarChar(100)
-  apellido              String      @db.VarChar(100)
-  dni                   String?     @unique @db.VarChar(20)
-  fecha_nacimiento      DateTime?   @db.Date
-  grupo_sanguineo       String?     @db.VarChar(10)
-  id_disciplina         Int
-  id_profesor_que_cargo Int?
-  fecha_ultimo_pago     DateTime?   @db.Date
-  activo                Boolean?    @default(true)
-  inactivo              Boolean?    @default(false)
-  domicilio             String?     @db.VarChar(255)
-  fecha_vencimiento     DateTime?   @db.Date
-  disciplinas           disciplinas @relation(fields: [id_disciplina], references: [id_disciplina], onDelete: NoAction, onUpdate: NoAction, map: "fk_disciplina_cliente")
-  profesores            profesores? @relation(fields: [id_profesor_que_cargo], references: [id_profesor], onDelete: NoAction, onUpdate: NoAction, map: "fk_profesor_cargo")
-  pagos                 pagos[]
+  id_cliente                    Int         @id @default(autoincrement())
+  nombre                        String      @db.VarChar(100)
+  apellido                      String      @db.VarChar(100)
+  dni                           String?     @unique @db.VarChar(20)
+  fecha_nacimiento              DateTime?   @db.Date
+  grupo_sanguineo               String?     @db.VarChar(10)
+  id_disciplina                 Int
+  id_profesor_que_cargo         Int?
+  fecha_ultimo_pago             DateTime?   @db.Date
+  activo                        Boolean?    @default(true)
+  inactivo                      Boolean?    @default(false)
+  domicilio                     String?     @db.VarChar(255)
+  fecha_vencimiento             DateTime?   @db.Date
+  numero_celular                String?     @db.VarChar(30)
+  numero_celular_emergencia     String?     @db.VarChar(30)
+  alergia_medicamento           String?
+  tiempo_entrenamiento          String?     @db.VarChar(100)
+  disciplinas                   disciplinas @relation(fields: [id_disciplina], references: [id_disciplina], onDelete: NoAction, onUpdate: NoAction, map: "fk_disciplina_cliente")
+  profesores                    profesores? @relation(fields: [id_profesor_que_cargo], references: [id_profesor], onDelete: NoAction, onUpdate: NoAction, map: "fk_profesor_cargo")
+  pagos                         pagos[]
 }
 
 model disciplinas {
