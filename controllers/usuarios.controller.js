@@ -27,7 +27,7 @@ const loginUsuario = async (req, res) => {
         }
         
         // Generar token JWT
-        const token = generateToken(usuario.id_usuario, usuario.mail_usuario);
+        const token = generateToken(usuario.id_usuario, usuario.mail_usuario, usuario.rol);
         
         res.json({
             message: 'Login exitoso',
@@ -103,7 +103,7 @@ const createUsuario = async (req, res) => {
             where: { mail_usuario }
         });
         
-        if (usuarioExistente) {
+        if (usuarioExistente?.activo) {
             return res.status(400).json({ error: 'El email ya está registrado' });
         }
         
@@ -111,7 +111,28 @@ const createUsuario = async (req, res) => {
         const saltRounds = 10;
         const contrasenaHasheada = await bcrypt.hash(contrasena_usuario, saltRounds);
 
-        const usuario = await prisma.usuarios.create({
+        // Si el email pertenecía a un usuario dado de baja, se reactiva con los datos nuevos
+        // (el email es único en la base, así que no se puede crear otro registro)
+        const usuario = usuarioExistente
+            ? await prisma.usuarios.update({
+                where: { id_usuario: usuarioExistente.id_usuario },
+                data: {
+                    nombre_usuario,
+                    contrasena_usuario: contrasenaHasheada,
+                    rol,
+                    id_profesor: id_profesor ? parseInt(id_profesor) : null,
+                    activo: true
+                },
+                select: {
+                    id_usuario: true,
+                    nombre_usuario: true,
+                    mail_usuario: true,
+                    rol: true,
+                    activo: true,
+                    id_profesor: true
+                }
+            })
+            : await prisma.usuarios.create({
             data: {
                 nombre_usuario,
                 mail_usuario,
@@ -178,6 +199,9 @@ const updateUsuario = async (req, res) => {
         
         res.json(usuarioActualizado);
     } catch (error) {
+        if (error?.code === 'P2002') {
+            return res.status(409).json({ error: 'Ese email ya lo usa otro usuario' });
+        }
         console.error(error);
         res.status(500).json({ error: 'Error al actualizar el usuario' });
     }

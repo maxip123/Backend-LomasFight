@@ -1,14 +1,16 @@
 import { prisma } from '../config/prisma.js';
 
+// Estos endpoints son públicos (landing): nunca incluir alumnos.
+const PUBLIC_INCLUDE = {
+    horarios: { where: { activo: true } },
+    disciplinas: true
+};
+
 const getProfesores = async (req, res) => {
     try {
         const profesores = await prisma.profesores.findMany({
             where: { activo: true },
-            include: {
-                clientes: true,
-                horarios: true,
-                disciplinas: true
-            }
+            include: PUBLIC_INCLUDE
         });
         res.json(profesores);
     } catch (error) {
@@ -22,11 +24,7 @@ const getProfesorById = async (req, res) => {
     try {
         const profesor = await prisma.profesores.findUnique({
             where: { id_profesor: parseInt(id) },
-            include: {
-                clientes: true,
-                horarios: true,
-                disciplinas: true
-            }
+            include: PUBLIC_INCLUDE
         });
         if (!profesor || !profesor.activo) {
             return res.status(404).json({ error: 'Profesor no encontrado' });

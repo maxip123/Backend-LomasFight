@@ -1,12 +1,21 @@
 import { prisma } from '../config/prisma.js';
+import { isAdmin } from '../middleware/auth.middleware.js';
+
+// Un profesor solo puede ver/modificar alumnos que tiene a cargo
+const puedeGestionar = (req, cliente) =>
+    isAdmin(req) || (req.user?.id_profesor != null && cliente.id_profesor_que_cargo === req.user.id_profesor);
 
 const getClientes = async (req, res) => {
     try {
         const { id_profesor } = req.query;
         const whereClause = { activo: true };
         
-        // Si se pasa id_profesor, filtrar alumnos por profesor
-        if (id_profesor) {
+        if (!isAdmin(req)) {
+            // Profesor: siempre limitado a sus alumnos, ignorando el query param
+            if (req.user?.id_profesor == null) return res.json([]);
+            whereClause.id_profesor_que_cargo = req.user.id_profesor;
+        } else if (id_profesor) {
+            // Admin: filtro opcional por profesor
             whereClause.id_profesor_que_cargo = parseInt(id_profesor);
         }
 
@@ -15,7 +24,7 @@ const getClientes = async (req, res) => {
             include: {
                 disciplinas: true,
                 profesores: true,
-                pagos: true
+                pagos: { where: { activo: true } }
             }
         });
         res.json(clientes);
@@ -33,10 +42,10 @@ const getClienteById = async (req, res) => {
             include: {
                 disciplinas: true,
                 profesores: true,
-                pagos: true
+                pagos: { where: { activo: true } }
             }
         });
-        if (!cliente) {
+        if (!cliente || !puedeGestionar(req, cliente)) {
             return res.status(404).json({ error: 'Cliente no encontrado' });
         }
         res.json(cliente);
@@ -67,6 +76,15 @@ const createCliente = async (req, res) => {
             return res.status(400).json({ error: 'Faltan campos requeridos' });
         }
 
+        // Un profesor solo puede crear alumnos a su cargo
+        let profesorACargo = id_profesor_que_cargo ? parseInt(id_profesor_que_cargo) : null;
+        if (!isAdmin(req)) {
+            if (req.user?.id_profesor == null) {
+                return res.status(403).json({ error: 'Tu usuario no está vinculado a un profesor' });
+            }
+            profesorACargo = req.user.id_profesor;
+        }
+
         const cliente = await prisma.clientes.create({
             data: {
                 nombre,
@@ -76,7 +94,7 @@ const createCliente = async (req, res) => {
                 grupo_sanguineo: grupo_sanguineo || null,
                 domicilio: domicilio || null,
                 id_disciplina,
-                id_profesor_que_cargo: id_profesor_que_cargo ? parseInt(id_profesor_que_cargo) : null,
+                id_profesor_que_cargo: profesorACargo,
                 numero_celular: numero_celular || null,
                 numero_celular_emergencia: numero_celular_emergencia || null,
                 alergia_medicamento: alergia_medicamento || null,
@@ -91,6 +109,9 @@ const createCliente = async (req, res) => {
 
         res.status(201).json(cliente);
     } catch (error) {
+        if (error?.code === 'P2002') {
+            return res.status(409).json({ error: 'Ya existe un alumno con ese DNI (puede estar dado de baja)' });
+        }
         console.error(error);
         res.status(500).json({ error: 'Error al crear el cliente' });
     }
@@ -122,9 +143,12 @@ const updateCliente = async (req, res) => {
             where: { id_cliente: parseInt(id) }
         });
 
-        if (!cliente) {
+        if (!cliente || !puedeGestionar(req, cliente)) {
             return res.status(404).json({ error: 'Cliente no encontrado' });
         }
+
+        // Un profesor no puede reasignar el alumno a otro profesor
+        const cambiaProfesor = isAdmin(req) && id_profesor_que_cargo !== undefined;
 
         const clienteActualizado = await prisma.clientes.update({
             where: { id_cliente: parseInt(id) },
@@ -136,7 +160,7 @@ const updateCliente = async (req, res) => {
                 ...(grupo_sanguineo !== undefined && { grupo_sanguineo: grupo_sanguineo || null }),
                 ...(domicilio !== undefined && { domicilio: domicilio || null }),
                 ...(id_disciplina && { id_disciplina }),
-                ...(id_profesor_que_cargo !== undefined && { id_profesor_que_cargo: id_profesor_que_cargo ? parseInt(id_profesor_que_cargo) : null }),
+                ...(cambiaProfesor && { id_profesor_que_cargo: id_profesor_que_cargo ? parseInt(id_profesor_que_cargo) : null }),
                 ...(activo !== undefined && { activo }),
                 ...(inactivo !== undefined && { inactivo }), // nuevo campo estado inactivo
                 ...(fecha_ultimo_pago !== undefined && {
@@ -158,6 +182,9 @@ const updateCliente = async (req, res) => {
 
         res.json(clienteActualizado);
     } catch (error) {
+        if (error?.code === 'P2002') {
+            return res.status(409).json({ error: 'Ya existe un alumno con ese DNI (puede estar dado de baja)' });
+        }
         console.error(error);
         res.status(500).json({ error: 'Error al actualizar el cliente' });
     }
@@ -173,7 +200,7 @@ const deleteCliente = async (req, res) => {
             where: { id_cliente: clienteId }
         });
 
-        if (!cliente) {
+        if (!cliente || !puedeGestionar(req, cliente)) {
             return res.status(404).json({ error: 'Cliente no encontrado' });
         }
 
