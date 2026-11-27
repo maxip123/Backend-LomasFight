@@ -33,13 +33,17 @@ const getDisciplinaById = async (req, res) => {
             });
         } else {
             // Es un texto, buscamos por nombre. Como no tiene @unique usamos findFirst.
-            disciplina = await prisma.disciplinas.findFirst({
+            // Coincidencia exacta ignorando mayúsculas y espacios de los extremos
+            // (tolera nombres viejos guardados con un espacio al final, ej. "Jiu-Jitsu ").
+            const buscado = id.trim().toLowerCase();
+            const candidatas = await prisma.disciplinas.findMany({
                 where: {
-                    nombre_disciplina: { equals: id, mode: 'insensitive' },
+                    nombre_disciplina: { startsWith: id.trim(), mode: 'insensitive' },
                     activo: true
                 },
                 include: PUBLIC_INCLUDE
             });
+            disciplina = candidatas.find(d => d.nombre_disciplina.trim().toLowerCase() === buscado) ?? null;
         }
 
         if (!disciplina || !disciplina.activo) {
@@ -54,7 +58,9 @@ const getDisciplinaById = async (req, res) => {
 
 const createDisciplina = async (req, res) => {
     try {
-        const { nombre_disciplina, cuota, descripcion, img_banner, img_preview, numero_celular } = req.body;
+        const { cuota, descripcion, img_banner, img_preview, numero_celular } = req.body;
+        // Sin espacios sobrantes: un espacio al final rompía la búsqueda por nombre
+        const nombre_disciplina = req.body.nombre_disciplina?.trim();
 
         if (!nombre_disciplina || !cuota) {
             return res.status(400).json({ error: 'Faltan campos requeridos' });
@@ -82,7 +88,8 @@ const createDisciplina = async (req, res) => {
 const updateDisciplina = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre_disciplina, cuota, descripcion, img_banner, img_preview, numero_celular } = req.body;
+        const { cuota, descripcion, img_banner, img_preview, numero_celular } = req.body;
+        const nombre_disciplina = req.body.nombre_disciplina?.trim();
 
         const disciplina = await prisma.disciplinas.findUnique({
             where: { id_disciplina: parseInt(id) }

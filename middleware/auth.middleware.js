@@ -2,8 +2,11 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/prisma.js';
 
-// Duración de la sesión. Al vencer, el usuario tiene que volver a iniciar sesión.
-const TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '12h';
+// Duración de la sesión. Por defecto los tokens NO vencen (decisión del gym).
+// Opcional: definir JWT_EXPIRES_IN (ej. '12h', '7d') para que venzan.
+// Igual es seguro dar de baja a alguien: verifyToken revisa en la base que siga activo.
+// Para cerrar la sesión de todos a la vez, cambiar JWT_SECRET.
+const TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || null;
 
 // Middleware para comparar contraseñas
 const comparePassword = async (plainPassword, hashedPassword) => {
@@ -14,12 +17,12 @@ const comparePassword = async (plainPassword, hashedPassword) => {
   }
 };
 
-// Generar JWT con expiración
+// Generar JWT (con expiración solo si JWT_EXPIRES_IN está definido)
 const generateToken = (userId, email, rol) => {
   return jwt.sign(
     { userId, email, rol },
     process.env.JWT_SECRET,
-    { expiresIn: TOKEN_EXPIRES_IN }
+    TOKEN_EXPIRES_IN ? { expiresIn: TOKEN_EXPIRES_IN } : undefined
   );
 };
 
@@ -38,11 +41,6 @@ const verifyToken = async (req, res, next) => {
     decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
     return res.status(401).json({ error: 'Token inválido o expirado' });
-  }
-
-  // Tokens viejos emitidos sin expiración ya no se aceptan
-  if (!decoded.exp) {
-    return res.status(401).json({ error: 'Sesión expirada, volvé a iniciar sesión' });
   }
 
   try {
