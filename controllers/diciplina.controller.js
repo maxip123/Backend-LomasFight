@@ -1,15 +1,16 @@
 import { prisma } from '../config/prisma.js';
 
+// Estos endpoints son públicos (landing): nunca incluir alumnos ni pagos.
+const PUBLIC_INCLUDE = {
+    horarios: { where: { activo: true } },
+    profesores: { where: { activo: true } }
+};
+
 const getDisciplinas = async (req, res) => {
     try {
         const disciplinas = await prisma.disciplinas.findMany({
             where: { activo: true },
-            include: {
-                clientes: true,
-                horarios: true,
-                pagos: true,
-                profesores: true
-            }
+            include: PUBLIC_INCLUDE
         });
         res.json(disciplinas);
     } catch (error) {
@@ -28,12 +29,7 @@ const getDisciplinaById = async (req, res) => {
             // Es un número, buscamos por ID
             disciplina = await prisma.disciplinas.findUnique({
                 where: { id_disciplina: parseInt(id) },
-                include: {
-                    clientes: true,
-                    horarios: true,
-                    pagos: true,
-                    profesores: true
-                }
+                include: PUBLIC_INCLUDE
             });
         } else {
             // Es un texto, buscamos por nombre. Como no tiene @unique usamos findFirst.
@@ -42,12 +38,7 @@ const getDisciplinaById = async (req, res) => {
                     nombre_disciplina: { equals: id, mode: 'insensitive' },
                     activo: true
                 },
-                include: {
-                    clientes: true,
-                    horarios: true,
-                    pagos: true,
-                    profesores: true
-                }
+                include: PUBLIC_INCLUDE
             });
         }
 

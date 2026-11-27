@@ -1,13 +1,14 @@
 import express from 'express';
 import { getHorarios, getHorarioById, createHorario, updateHorario, deleteHorario } from '../controllers/horarios.controller.js';
-import { verifyToken } from '../middleware/auth.middleware.js';
+import { verifyToken, requireAdmin } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-router.get('/',  getHorarios);
+// Lectura pública (landing). Escritura solo admin.
+router.get('/', getHorarios);
 router.get('/:id', getHorarioById);
-router.post('/', verifyToken, createHorario);
-router.put('/:id', verifyToken, updateHorario);
-router.delete('/:id', verifyToken, deleteHorario);
+router.post('/', verifyToken, requireAdmin, createHorario);
+router.put('/:id', verifyToken, requireAdmin, updateHorario);
+router.delete('/:id', verifyToken, requireAdmin, deleteHorario);
 
 export default router;
