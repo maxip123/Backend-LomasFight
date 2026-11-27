@@ -33,3 +33,10 @@ ALTER TABLE clientes
 -- 5. Beneficios personalizables por disciplina ("Por qué elegir ...")
 --    Lista JSON de { "titulo": "...", "descripcion": "..." }. NULL = usar los beneficios genéricos.
 ALTER TABLE disciplinas ADD COLUMN IF NOT EXISTS beneficios JSONB;
+
+-- 6. Duración de cada clase en horas (1, 2, 3...). Las clases existentes quedan en 1 hora.
+ALTER TABLE horarios ADD COLUMN IF NOT EXISTS duracion_horas SMALLINT NOT NULL DEFAULT 1;
+
+-- 7. Prefijo del profesor que se muestra antes del nombre en los horarios (Sensei, Profe, Instructor...).
+--    Los profesores existentes quedan con 'Sensei'. Vacío = se muestra solo el nombre.
+ALTER TABLE profesores ADD COLUMN IF NOT EXISTS prefijo VARCHAR(30) NOT NULL DEFAULT 'Sensei';
