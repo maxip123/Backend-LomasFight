@@ -30,3 +30,6 @@ ALTER TABLE clientes
   ADD COLUMN IF NOT EXISTS alergia_medicamento    TEXT,
   ADD COLUMN IF NOT EXISTS tiempo_entrenamiento   VARCHAR(100);
 
+-- 5. Beneficios personalizables por disciplina ("Por qué elegir ...")
+--    Lista JSON de { "titulo": "...", "descripcion": "..." }. NULL = usar los beneficios genéricos.
+ALTER TABLE disciplinas ADD COLUMN IF NOT EXISTS beneficios JSONB;
