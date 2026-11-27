@@ -54,6 +54,7 @@ model horarios {
   id_disciplina Int
   id_profesor   Int
   activo        Boolean?    @default(true)
+  duracion_horas Int        @default(1) @db.SmallInt
   disciplinas   disciplinas @relation(fields: [id_disciplina], references: [id_disciplina], onDelete: NoAction, onUpdate: NoAction, map: "fk_disciplina_horario")
   profesores    profesores  @relation(fields: [id_profesor], references: [id_profesor], onDelete: NoAction, onUpdate: NoAction, map: "fk_profesor_horario")
 }
@@ -77,6 +78,7 @@ model profesores {
   activo        Boolean?    @default(true)
   descripcion   String?
   imagen        String?     @db.VarChar(255)
+  prefijo       String      @default("Sensei") @db.VarChar(30) // "Sensei", "Profe", "Instructor"... vacío = solo nombre
   clientes      clientes[]
   horarios      horarios[]
   disciplinas   disciplinas @relation(fields: [id_disciplina], references: [id_disciplina], onDelete: NoAction, onUpdate: NoAction, map: "fk_disciplina_profesor")

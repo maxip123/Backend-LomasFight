@@ -6,6 +6,10 @@ const PUBLIC_INCLUDE = {
     disciplinas: true
 };
 
+const MAX_PREFIJO = 30;
+/** Prefijo recortado (puede quedar vacío: se muestra solo el nombre). */
+const normalizarPrefijo = (valor) => String(valor ?? '').trim().slice(0, MAX_PREFIJO);
+
 const getProfesores = async (req, res) => {
     try {
         const profesores = await prisma.profesores.findMany({
@@ -38,7 +42,7 @@ const getProfesorById = async (req, res) => {
 
 const createProfesor = async (req, res) => {
     try {
-        const { nombre, apellido, id_disciplina, descripcion, imagen } = req.body;
+        const { nombre, apellido, id_disciplina, descripcion, imagen, prefijo } = req.body;
 
         if (!nombre || !apellido || !id_disciplina) {
             return res.status(400).json({ error: 'Faltan campos requeridos' });
@@ -51,6 +55,8 @@ const createProfesor = async (req, res) => {
                 id_disciplina: parseInt(id_disciplina),
                 descripcion,
                 imagen,
+                // Si no se envía, queda el valor por defecto de la base ("Sensei")
+                ...(prefijo !== undefined && { prefijo: normalizarPrefijo(prefijo) }),
                 activo: true
             },
             include: {
@@ -68,7 +74,7 @@ const createProfesor = async (req, res) => {
 const updateProfesor = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, apellido, id_disciplina, descripcion, imagen } = req.body;
+        const { nombre, apellido, id_disciplina, descripcion, imagen, prefijo } = req.body;
 
         const profesor = await prisma.profesores.findUnique({
             where: { id_profesor: parseInt(id) }
@@ -85,7 +91,8 @@ const updateProfesor = async (req, res) => {
                 ...(apellido && { apellido }),
                 ...(id_disciplina && { id_disciplina: parseInt(id_disciplina) }),
                 ...(descripcion !== undefined && { descripcion }),
-                ...(imagen !== undefined && { imagen })
+                ...(imagen !== undefined && { imagen }),
+                ...(prefijo !== undefined && { prefijo: normalizarPrefijo(prefijo) })
             },
             include: {
                 disciplinas: true
