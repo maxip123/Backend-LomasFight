@@ -1,9 +1,29 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '../config/prisma.js';
 
 // Estos endpoints son públicos (landing): nunca incluir alumnos ni pagos.
 const PUBLIC_INCLUDE = {
     horarios: { where: { activo: true } },
     profesores: { where: { activo: true } }
+};
+
+const MAX_BENEFICIOS = 6;
+
+/**
+ * Normaliza la lista de beneficios que manda el admin: [{ titulo, descripcion }].
+ * Descarta ítems sin título, recorta espacios y limita la cantidad.
+ * Devuelve null si queda vacía (la landing usa entonces los beneficios genéricos).
+ */
+const normalizarBeneficios = (beneficios) => {
+    if (!Array.isArray(beneficios)) return null;
+    const limpios = beneficios
+        .map(b => ({
+            titulo: String(b?.titulo ?? '').trim().slice(0, 80),
+            descripcion: String(b?.descripcion ?? '').trim().slice(0, 300)
+        }))
+        .filter(b => b.titulo)
+        .slice(0, MAX_BENEFICIOS);
+    return limpios.length ? limpios : null;
 };
 
 const getDisciplinas = async (req, res) => {
@@ -58,7 +78,7 @@ const getDisciplinaById = async (req, res) => {
 
 const createDisciplina = async (req, res) => {
     try {
-        const { cuota, descripcion, img_banner, img_preview, numero_celular } = req.body;
+        const { cuota, descripcion, img_banner, img_preview, numero_celular, beneficios } = req.body;
         // Sin espacios sobrantes: un espacio al final rompía la búsqueda por nombre
         const nombre_disciplina = req.body.nombre_disciplina?.trim();
 
@@ -74,6 +94,7 @@ const createDisciplina = async (req, res) => {
                 img_banner,
                 img_preview,
                 numero_celular: numero_celular || null,
+                beneficios: normalizarBeneficios(beneficios) ?? Prisma.DbNull,
                 activo: true
             }
         });
@@ -88,7 +109,7 @@ const createDisciplina = async (req, res) => {
 const updateDisciplina = async (req, res) => {
     try {
         const { id } = req.params;
-        const { cuota, descripcion, img_banner, img_preview, numero_celular } = req.body;
+        const { cuota, descripcion, img_banner, img_preview, numero_celular, beneficios } = req.body;
         const nombre_disciplina = req.body.nombre_disciplina?.trim();
 
         const disciplina = await prisma.disciplinas.findUnique({
@@ -107,7 +128,8 @@ const updateDisciplina = async (req, res) => {
                 ...(descripcion && { descripcion }),
                 ...(img_banner !== undefined && { img_banner }),
                 ...(img_preview !== undefined && { img_preview }),
-                ...(numero_celular !== undefined && { numero_celular: numero_celular || null })
+                ...(numero_celular !== undefined && { numero_celular: numero_celular || null }),
+                ...(beneficios !== undefined && { beneficios: normalizarBeneficios(beneficios) ?? Prisma.DbNull })
             }
         });
 
